@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Details Page</title>
+    </head>
+    <body>
+        <h1><%= tarCampground.title %></h1>
+        <%= tarCampground.location %>
+        <p>
+            <a href="/campgrounds/<%= tarCampground._id%>/edit">Edit</a>
+        </p>
+        <p>
+            <form action="/campgrounds/<%= tarCampground._id %>?_method=DELETE" method="POST">
+            <button type="submit">Delete</button></form>
+        </p>
+        <p>
+            <a href="/campgrounds">Back to All Campgrounds</a>
+        </p>
+    </body>
+</html>
