@@ -1,13 +1,17 @@
 // step 1: set up the app framework: using express
 const express = require('express');
-
 const app = express();
 
 // step 2: set up the view engine: ejs
+const ejsMate = require('ejs-mate');
 const path = require('path');
+app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// =================================================================
+// ================== Database Connection ==========================
+// =================================================================
 // step 3: set up database connection
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/camp-oasis', {
@@ -21,13 +25,21 @@ db.once('open', () => {
     console.log('Database connected');
 });
 
-// tell express to parse the request body
-app.use(express.urlencoded({ extended: true }));
-
 // 3.1 require model
 const Campground = require('./models/Campground');
 
-// Route Handlers
+// =================================================================
+// ======================= Middlewares =============================
+// =================================================================
+// tell express to parse the request body
+app.use(express.urlencoded({ extended: true }));
+// BEFORE DEFINE POST & DELETE: require method override to handle the put/delete actions
+const methodOverride = require('method-override');
+app.use(methodOverride('_method'));
+
+// =================================================================
+// ======================= Route Handlers ==========================
+// =================================================================
 
 // ------------------ Retrieve All Campgrounds  ------------------
 // render the page to show all the campground
@@ -57,10 +69,6 @@ app.get('/campgrounds/:id', async (req, res) => {
 });
 
 // ------------------ Update Single Campground ------------------
-// BEFORE DEFINE POST & DELETE: require method override to handle the put/delete actions
-const methodOverride = require('method-override');
-app.use(methodOverride('_method'));
-
 // render the form page to edit the campground
 app.get('/campgrounds/:id/edit', async (req, res) => {
     const tarCampground = await Campground.findById(req.params.id);
