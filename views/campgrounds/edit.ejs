@@ -1,32 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Edit Campground</title>
-    </head>
-    <body>
-        <!-- define a form to allow user to add new campground -->
-        <form action="/campgrounds/<%= tarCampground._id %>?_method=PUT" method="POST">
-            <div>
-                <label for="title">Title</label>
-                <input
-                    type="text"
-                    id="title"
-                    name="campground[title]"
-                    value="<%= tarCampground.title %>" />
-            </div>
-            <div>
-                <label for="location">Location</label>
-                <input
-                    type="text"
-                    id="location"
-                    name="campground[location]"
-                    value="<%= tarCampground.location %>" />
-            </div>
-            <button>Save</button>
-        </form>
-        <!-- add a link to back to the detail page -->
-        <a href="/campgrounds/<%= tarCampground._id %>">Back</a>
-    </body>
-</html>
+<% layout('layouts/boilerplate') %>
+
+<!-- define a form to allow user to add new campground -->
+<form action="/campgrounds/<%= tarCampground._id %>?_method=PUT" method="POST">
+    <div>
+        <label for="title">Title</label>
+        <input
+            type="text"
+            id="title"
+            name="campground[title]"
+            value="<%= tarCampground.title %>" />
+    </div>
+    <div>
+        <label for="location">Location</label>
+        <input
+            type="text"
+            id="location"
+            name="campground[location]"
+            value="<%= tarCampground.location %>" />
+    </div>
+    <button>Save</button>
+</form>
+<!-- add a link to back to the detail page -->
+<a href="/campgrounds/<%= tarCampground._id %>">Back</a>
