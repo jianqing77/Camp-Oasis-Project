@@ -39,6 +39,17 @@ app.use(methodOverride('_method'));
 // error handling: import the async wrapper defined in utils
 const ExpressError = require('./utils/ExpressError');
 const catchAsync = require('./utils/catchAsync');
+// validate campground form data middleware
+const { campgroundSchema } = require('./schemas/campgroundSchema');
+const validateCampgroundForm = (req, res, next) => {
+    const validationResult = campgroundSchema.validate(req.body);
+    if (validationResult.error) {
+        const msg = validationResult.error.details.map((el) => el.message).join(', ');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+};
 
 // =================================================================
 // ======================= Route Handlers ==========================
@@ -66,6 +77,7 @@ app.get(
 // use the req.body from the addNew.ejs
 app.post(
     '/campgrounds',
+    validateCampgroundForm,
     catchAsync(async (req, res, next) => {
         if (!req.body.campground) {
             throw new ExpressError('Invalid Campground Data', 400);
@@ -99,6 +111,7 @@ app.get(
 // define the route to change the campground info with req.body from the edit.ejs
 app.put(
     '/campgrounds/:id',
+    validateCampgroundForm,
     catchAsync(async (req, res) => {
         const tarId = req.params.id;
         const updatedCampground = await Campground.findByIdAndUpdate(tarId, {
