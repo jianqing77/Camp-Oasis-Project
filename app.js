@@ -36,6 +36,9 @@ app.use(express.urlencoded({ extended: true }));
 // BEFORE DEFINE POST & DELETE: require method override to handle the put/delete actions
 const methodOverride = require('method-override');
 app.use(methodOverride('_method'));
+// error handling: import the async wrapper defined in utils
+const ExpressError = require('./utils/ExpressError');
+const catchAsync = require('./utils/catchAsync');
 
 // =================================================================
 // ======================= Route Handlers ==========================
@@ -43,52 +46,90 @@ app.use(methodOverride('_method'));
 
 // ------------------ Retrieve All Campgrounds  ------------------
 // render the page to show all the campground
-app.get('/campgrounds', async (req, res) => {
-    const allCampgrounds = await Campground.find({});
-    res.render('campgrounds/index', { allCampgrounds });
-});
+app.get(
+    '/campgrounds',
+    catchAsync(async (req, res) => {
+        const allCampgrounds = await Campground.find({});
+        res.render('campgrounds/index', { allCampgrounds });
+    })
+);
 
 // ------------------ Add New Campground --------------------
 // render form page to add new campground
-app.get('/campgrounds/new', async (req, res) => {
-    res.render('campgrounds/addNew');
-});
+app.get(
+    '/campgrounds/new',
+    catchAsync(async (req, res) => {
+        res.render('campgrounds/addNew');
+    })
+);
 
 // use the req.body from the addNew.ejs
-app.post('/campgrounds', async (req, res) => {
-    const newCampground = new Campground(req.body.campground);
-    await newCampground.save();
-    res.redirect(`/campgrounds/${newCampground._id}`);
-});
+app.post(
+    '/campgrounds',
+    catchAsync(async (req, res, next) => {
+        if (!req.body.campground) {
+            throw new ExpressError('Invalid Campground Data', 400);
+        }
+        const newCampground = new Campground(req.body.campground);
+        await newCampground.save();
+        res.redirect(`/campgrounds/${newCampground._id}`);
+    })
+);
 
 // ------------------ Retrieve Single Campground ------------------
 // direct to the page to show the campground details
-app.get('/campgrounds/:id', async (req, res) => {
-    const tarCampground = await Campground.findById(req.params.id);
-    res.render('campgrounds/detail', { tarCampground });
-});
+app.get(
+    '/campgrounds/:id',
+    catchAsync(async (req, res) => {
+        const tarCampground = await Campground.findById(req.params.id);
+        res.render('campgrounds/detail', { tarCampground });
+    })
+);
 
 // ------------------ Update Single Campground ------------------
 // render the form page to edit the campground
-app.get('/campgrounds/:id/edit', async (req, res) => {
-    const tarCampground = await Campground.findById(req.params.id);
-    res.render('campgrounds/edit', { tarCampground });
-});
+app.get(
+    '/campgrounds/:id/edit',
+    catchAsync(async (req, res) => {
+        const tarCampground = await Campground.findById(req.params.id);
+        res.render('campgrounds/edit', { tarCampground });
+    })
+);
 
 // define the route to change the campground info with req.body from the edit.ejs
-app.put('/campgrounds/:id', async (req, res) => {
-    const tarId = req.params.id;
-    const updatedCampground = await Campground.findByIdAndUpdate(tarId, {
-        ...req.body.campground,
-    });
-    res.redirect(`/campgrounds/${updatedCampground._id}`);
-});
+app.put(
+    '/campgrounds/:id',
+    catchAsync(async (req, res) => {
+        const tarId = req.params.id;
+        const updatedCampground = await Campground.findByIdAndUpdate(tarId, {
+            ...req.body.campground,
+        });
+        res.redirect(`/campgrounds/${updatedCampground._id}`);
+    })
+);
 
 // ------------------ Delete Single Campground ------------------
-app.delete('/campgrounds/:id', async (req, res) => {
-    const tarId = req.params.id;
-    await Campground.findByIdAndDelete(tarId);
-    res.redirect('/campgrounds');
+app.delete(
+    '/campgrounds/:id',
+    catchAsync(async (req, res) => {
+        const tarId = req.params.id;
+        await Campground.findByIdAndDelete(tarId);
+        res.redirect('/campgrounds');
+    })
+);
+// =================================================================
+// ======================== Error Handler ==========================
+// =================================================================
+// Middleware to handle requests for routes not previously defined
+app.all('*', (req, res, next) => {
+    const UndefinedPageError = new ExpressError('Page not found', 404);
+    next(UndefinedPageError); // Pass the error to the next middleware
+});
+// ------------------ Error Handler Middleware ------------------
+app.use((err, req, res, next) => {
+    const { message = 'something went wrong', statusCode = 500 } = err;
+    res.status(statusCode).send(message);
+    res.send('oh something went wrong');
 });
 
 //
