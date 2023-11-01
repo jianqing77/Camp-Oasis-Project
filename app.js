@@ -127,9 +127,10 @@ app.all('*', (req, res, next) => {
 });
 // ------------------ Error Handler Middleware ------------------
 app.use((err, req, res, next) => {
-    const { message = 'something went wrong', statusCode = 500 } = err;
-    res.status(statusCode).send(message);
-    res.send('oh something went wrong');
+    const { statusCode } = err; // Destructure the status code from the error object
+    if (!err.message) err.message = 'Oh no! Something went wrong.'; // If there is no message attached to the error, set a default error message
+    // Set the status of the response & render an error template.
+    res.status(statusCode).render('error', { err }); // also passing in the error object to the template, which can be used to display specific error details.
 });
 
 //
