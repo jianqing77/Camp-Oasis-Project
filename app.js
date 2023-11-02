@@ -51,6 +51,17 @@ const validateCampgroundForm = (req, res, next) => {
     }
 };
 
+const { reviewSchema } = require('./schemas/reviewSchema');
+const validateReviewForm = (req, res, next) => {
+    const validationResult = reviewSchema.validate(req.body);
+    if (validationResult.error) {
+        const msg = validationResult.error.details.map((el) => el.message).join(', ');
+        throw new ExpressError(msg, 400);
+    } else {
+        next();
+    }
+};
+
 // =================================================================
 // ======================= Route Handlers ==========================
 // =================================================================
@@ -93,7 +104,9 @@ app.post(
 app.get(
     '/campgrounds/:id',
     catchAsync(async (req, res) => {
-        const tarCampground = await Campground.findById(req.params.id);
+        const tarCampground = await Campground.findById(req.params.id).populate(
+            'reviews'
+        );
         res.render('campgrounds/detail', { tarCampground });
     })
 );
@@ -130,6 +143,33 @@ app.delete(
         res.redirect('/campgrounds');
     })
 );
+
+// ------------------ Add New Review ------------------
+const Review = require('./models/review');
+app.post(
+    '/campgrounds/:id/reviews',
+    validateReviewForm,
+    catchAsync(async (req, res) => {
+        const tarCampground = await Campground.findById(req.params.id);
+        const newReview = new Review(req.body.review);
+        tarCampground.reviews.push(newReview);
+        await newReview.save();
+        await tarCampground.save();
+        res.redirect(`/campgrounds/${tarCampground._id}`);
+    })
+);
+
+// ------------------ Delete a Review ------------------
+app.delete(
+    '/campgrounds/:id/reviews/:reviewId',
+    catchAsync(async (req, res) => {
+        const { id, reviewId } = req.params;
+        await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+        await Review.findByIdAndDelete(reviewId);
+        res.redirect(`/campgrounds/${id}`);
+    })
+);
+
 // =================================================================
 // ======================== Error Handler ==========================
 // =================================================================
