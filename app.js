@@ -9,6 +9,8 @@ app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+app.use(express.static(path.join(__dirname, 'public')));
+
 // =================================================================
 // ================== Database Connection ==========================
 // =================================================================
@@ -23,6 +25,24 @@ const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => {
     console.log('Database connected');
+});
+
+// Session Configuration
+const session = require('express-session');
+const sessionConfig = {
+    secret: 'mySecretKey', // used to sign the session ID cookie
+    resave: false, // forces the session to be saved back to the session store, even if the session was never modified during the request
+    saveUninitialized: false, // forces a session that is "uninitialized" to be saved to the store
+    cookie: { httpOnly: true }, // marks the cookie to be used with HTTPS only
+};
+app.use(session(sessionConfig));
+// middleware to use the flash
+const flash = require('connect-flash');
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
 });
 
 // =================================================================

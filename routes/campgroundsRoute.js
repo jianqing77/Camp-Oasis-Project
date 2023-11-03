@@ -55,6 +55,7 @@ router.post(
         }
         const newCampground = new Campground(req.body.campground);
         await newCampground.save();
+        req.flash('success', 'Successfully added a new campground');
         res.redirect(`/campgrounds/${newCampground._id}`);
     })
 );
@@ -67,6 +68,10 @@ router.get(
         const tarCampground = await Campground.findById(req.params.id).populate(
             'reviews'
         );
+        if (!tarCampground) {
+            req.flash('error', 'No matching campground found!');
+            return res.redirect('/campgrounds');
+        }
         res.render('campgrounds/detail', { tarCampground });
     })
 );
@@ -77,6 +82,12 @@ router.get(
     '/:id/edit',
     catchAsync(async (req, res) => {
         const tarCampground = await Campground.findById(req.params.id);
+        if (!tarCampground) {
+            req.flash('error', 'No matching campground found!');
+            return res.redirect('/campgrounds');
+        }
+        req.flash('success', 'Successfully updated a campground');
+
         res.render('campgrounds/edit', { tarCampground });
     })
 );
@@ -100,6 +111,7 @@ router.delete(
     catchAsync(async (req, res) => {
         const tarId = req.params.id;
         await Campground.findByIdAndDelete(tarId);
+        req.flash('success', 'Successfully deleted the campground');
         res.redirect('/campgrounds');
     })
 );
