@@ -25,9 +25,6 @@ db.once('open', () => {
     console.log('Database connected');
 });
 
-// 3.1 require model
-const Campground = require('./models/Campground');
-
 // =================================================================
 // ======================= Middlewares =============================
 // =================================================================
@@ -39,136 +36,13 @@ app.use(methodOverride('_method'));
 // error handling: import the async wrapper defined in utils
 const ExpressError = require('./utils/ExpressError');
 const catchAsync = require('./utils/catchAsync');
-// validate campground form data middleware
-const { campgroundSchema } = require('./schemas/campgroundSchema');
-const validateCampgroundForm = (req, res, next) => {
-    const validationResult = campgroundSchema.validate(req.body);
-    if (validationResult.error) {
-        const msg = validationResult.error.details.map((el) => el.message).join(', ');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-};
 
-const { reviewSchema } = require('./schemas/reviewSchema');
-const validateReviewForm = (req, res, next) => {
-    const validationResult = reviewSchema.validate(req.body);
-    if (validationResult.error) {
-        const msg = validationResult.error.details.map((el) => el.message).join(', ');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-};
+// import the routes defined in the routes module
+const campgroundsRoutes = require('./routes/campgroundsRoute');
+const reviewsRoutes = require('./routes/reviewsRoute');
 
-// =================================================================
-// ======================= Route Handlers ==========================
-// =================================================================
-
-// ------------------ Retrieve All Campgrounds  ------------------
-// render the page to show all the campground
-app.get(
-    '/campgrounds',
-    catchAsync(async (req, res) => {
-        const allCampgrounds = await Campground.find({});
-        res.render('campgrounds/index', { allCampgrounds });
-    })
-);
-
-// ------------------ Add New Campground --------------------
-// render form page to add new campground
-app.get(
-    '/campgrounds/new',
-    catchAsync(async (req, res) => {
-        res.render('campgrounds/addNew');
-    })
-);
-
-// use the req.body from the addNew.ejs
-app.post(
-    '/campgrounds',
-    validateCampgroundForm,
-    catchAsync(async (req, res, next) => {
-        if (!req.body.campground) {
-            throw new ExpressError('Invalid Campground Data', 400);
-        }
-        const newCampground = new Campground(req.body.campground);
-        await newCampground.save();
-        res.redirect(`/campgrounds/${newCampground._id}`);
-    })
-);
-
-// ------------------ Retrieve Single Campground ------------------
-// direct to the page to show the campground details
-app.get(
-    '/campgrounds/:id',
-    catchAsync(async (req, res) => {
-        const tarCampground = await Campground.findById(req.params.id).populate(
-            'reviews'
-        );
-        res.render('campgrounds/detail', { tarCampground });
-    })
-);
-
-// ------------------ Update Single Campground ------------------
-// render the form page to edit the campground
-app.get(
-    '/campgrounds/:id/edit',
-    catchAsync(async (req, res) => {
-        const tarCampground = await Campground.findById(req.params.id);
-        res.render('campgrounds/edit', { tarCampground });
-    })
-);
-
-// define the route to change the campground info with req.body from the edit.ejs
-app.put(
-    '/campgrounds/:id',
-    validateCampgroundForm,
-    catchAsync(async (req, res) => {
-        const tarId = req.params.id;
-        const updatedCampground = await Campground.findByIdAndUpdate(tarId, {
-            ...req.body.campground,
-        });
-        res.redirect(`/campgrounds/${updatedCampground._id}`);
-    })
-);
-
-// ------------------ Delete Single Campground ------------------
-app.delete(
-    '/campgrounds/:id',
-    catchAsync(async (req, res) => {
-        const tarId = req.params.id;
-        await Campground.findByIdAndDelete(tarId);
-        res.redirect('/campgrounds');
-    })
-);
-
-// ------------------ Add New Review ------------------
-const Review = require('./models/review');
-app.post(
-    '/campgrounds/:id/reviews',
-    validateReviewForm,
-    catchAsync(async (req, res) => {
-        const tarCampground = await Campground.findById(req.params.id);
-        const newReview = new Review(req.body.review);
-        tarCampground.reviews.push(newReview);
-        await newReview.save();
-        await tarCampground.save();
-        res.redirect(`/campgrounds/${tarCampground._id}`);
-    })
-);
-
-// ------------------ Delete a Review ------------------
-app.delete(
-    '/campgrounds/:id/reviews/:reviewId',
-    catchAsync(async (req, res) => {
-        const { id, reviewId } = req.params;
-        await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
-        await Review.findByIdAndDelete(reviewId);
-        res.redirect(`/campgrounds/${id}`);
-    })
-);
+app.use('/campgrounds', campgroundsRoutes);
+app.use('/campgrounds/:id/reviews', reviewsRoutes);
 
 // =================================================================
 // ======================== Error Handler ==========================
@@ -180,7 +54,7 @@ app.all('*', (req, res, next) => {
 });
 // ------------------ Error Handler Middleware ------------------
 app.use((err, req, res, next) => {
-    const { statusCode } = err; // Destructure the status code from the error object
+    const { statusCode = 500 } = err; // Destructure the status code from the error object
     if (!err.message) err.message = 'Oh no! Something went wrong.'; // If there is no message attached to the error, set a default error message
     // Set the status of the response & render an error template.
     res.status(statusCode).render('error', { err }); // also passing in the error object to the template, which can be used to display specific error details.
