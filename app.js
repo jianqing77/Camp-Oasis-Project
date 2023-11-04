@@ -27,6 +27,8 @@ db.once('open', () => {
     console.log('Database connected');
 });
 
+// ================ Session & Flash Configuration ===================
+
 // Session Configuration
 const session = require('express-session');
 const sessionConfig = {
@@ -45,6 +47,18 @@ app.use((req, res, next) => {
     next();
 });
 
+// ================ Passport Configuration ===================
+const User = require('./models/User');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+// set up Passport's persistent login sessions
+app.use(passport.initialize()); // middleware to initialize Passport
+app.use(passport.session()); // used after the Express session middleware and passport.initialize(), as it relies on them
+passport.use(new LocalStrategy(User.authenticate())); // passport-local-mongoose provides to authenticate users
+// handle sessions
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 // =================================================================
 // ======================= Middlewares =============================
 // =================================================================
@@ -55,12 +69,13 @@ const methodOverride = require('method-override');
 app.use(methodOverride('_method'));
 // error handling: import the async wrapper defined in utils
 const ExpressError = require('./utils/ExpressError');
-const catchAsync = require('./utils/catchAsync');
 
 // import the routes defined in the routes module
 const campgroundsRoutes = require('./routes/campgroundsRoute');
 const reviewsRoutes = require('./routes/reviewsRoute');
+const userRoutes = require('./routes/userRoute');
 
+app.use('/', userRoutes);
 app.use('/campgrounds', campgroundsRoutes);
 app.use('/campgrounds/:id/reviews', reviewsRoutes);
 

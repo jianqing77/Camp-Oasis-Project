@@ -87,7 +87,6 @@ router.get(
             return res.redirect('/campgrounds');
         }
         req.flash('success', 'Successfully updated a campground');
-
         res.render('campgrounds/edit', { tarCampground });
     })
 );
