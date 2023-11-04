@@ -7,6 +7,7 @@ const Campground = require('../models/Campground');
 // error handling: import the async wrapper defined in utils
 const ExpressError = require('../utils/ExpressError');
 const catchAsync = require('../utils/catchAsync');
+const { isLoggedIn } = require('../utils/middleware');
 
 // =================================================================
 // ======================= Middlewares =============================
@@ -40,6 +41,7 @@ router.get(
 // render form page to add new campground
 router.get(
     '/new',
+    isLoggedIn,
     catchAsync(async (req, res) => {
         res.render('campgrounds/addNew');
     })
@@ -48,6 +50,7 @@ router.get(
 // use the req.body from the addNew.ejs
 router.post(
     '/',
+    isLoggedIn,
     validateCampgroundForm,
     catchAsync(async (req, res, next) => {
         if (!req.body.campground) {
@@ -80,6 +83,7 @@ router.get(
 // render the form page to edit the campground
 router.get(
     '/:id/edit',
+    isLoggedIn,
     catchAsync(async (req, res) => {
         const tarCampground = await Campground.findById(req.params.id);
         if (!tarCampground) {
