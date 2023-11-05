@@ -41,11 +41,6 @@ app.use(session(sessionConfig));
 // middleware to use the flash
 const flash = require('connect-flash');
 app.use(flash());
-app.use((req, res, next) => {
-    res.locals.success = req.flash('success');
-    res.locals.error = req.flash('error');
-    next();
-});
 
 // ================ Passport Configuration ===================
 const User = require('./models/User');
@@ -58,6 +53,13 @@ passport.use(new LocalStrategy(User.authenticate())); // passport-local-mongoose
 // handle sessions
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+app.use((req, res, next) => {
+    res.locals.currentUser = req.user; // define the global current user variable
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 
 // =================================================================
 // ======================= Middlewares =============================

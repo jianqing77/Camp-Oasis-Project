@@ -13,9 +13,13 @@
                     Location: <%= tarCampground.location%>
                 </li>
                 <li class="list-group-item text-muted">
+                    Hosted By: <%= tarCampground.author.username%>
+                </li>
+                <li class="list-group-item text-muted">
                     Price: $<%= tarCampground.price%>/night
                 </li>
             </ul>
+            <% if( currentUser && tarCampground.author.equals(currentUser._id)) {%>
             <div class="card-body">
                 <a
                     class="card-link btn btn-info"
@@ -29,12 +33,15 @@
                     <button class="btn btn-danger">Delete</button>
                 </form>
             </div>
+            <% } %>
+
             <div class="card-footer text-muted">2 days ago</div>
         </div>
     </div>
     <div class="col-6">
         <!-- Review Section -->
         <!-- Add a new Review -->
+        <% if(currentUser){ %>
         <form
             action="/campgrounds/<%= tarCampground._id %>/reviews"
             method="POST"
@@ -63,17 +70,23 @@
             </div>
             <button class="btn btn-success">Submit</button>
         </form>
+        <% } %>
         <!-- Display all the reviews -->
         <% for(let review of tarCampground.reviews) { %>
         <div class="card mb-3 ">
             <div class="card-body">
                 <h5 class="card-title">Rating: <%= review.rating %></h5>
+                <h6 class="card-subtitle mb-2 text-muted">
+                    By <%= review.author.username%>
+                </h6>
                 <p class="card-text">Review: <%= review.body %></p>
+                <% if( currentUser && review.author.equals(currentUser._id)) {%>
                 <form
                     action="/campgrounds/<%=tarCampground._id%>/reviews/<%=review._id%>?_method=DELETE"
                     method="POST">
                     <button class="btn btn-sm btn-danger">Delete</button>
                 </form>
+                <% } %>
             </div>
         </div>
         <% } %>

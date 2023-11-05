@@ -9,20 +9,10 @@ const Review = require('../models/Review');
 const ExpressError = require('../utils/ExpressError');
 const catchAsync = require('../utils/catchAsync');
 
+const { isLoggedIn, validateReviewForm, isReviewAuthor } = require('../utils/middleware');
 // =================================================================
 // ======================= Middlewares =============================
 // =================================================================
-const { reviewSchema } = require('../schemas/reviewSchema');
-
-const validateReviewForm = (req, res, next) => {
-    const validationResult = reviewSchema.validate(req.body);
-    if (validationResult.error) {
-        const msg = validationResult.error.details.map((el) => el.message).join(', ');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-};
 
 // =================================================================
 // ======================= Route Handlers ==========================
@@ -30,12 +20,14 @@ const validateReviewForm = (req, res, next) => {
 // ------------------ Add New Review ------------------
 router.post(
     '/',
+    isLoggedIn,
     validateReviewForm,
     catchAsync(async (req, res) => {
         const tarCampground = await Campground.findById(req.params.id);
-        const newReview = new Review(req.body.review);
-        tarCampground.reviews.push(newReview);
-        await newReview.save();
+        const review = new Review(req.body.review);
+        review.author = req.user._id;
+        tarCampground.reviews.push(review);
+        await review.save();
         await tarCampground.save();
         req.flash('success', 'Successfully added a review');
         res.redirect(`/campgrounds/${tarCampground._id}`);
@@ -45,6 +37,7 @@ router.post(
 // ------------------ Delete a Review ------------------
 router.delete(
     '/:reviewId',
+    isReviewAuthor,
     catchAsync(async (req, res) => {
         const { id, reviewId } = req.params;
         await Campground.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
