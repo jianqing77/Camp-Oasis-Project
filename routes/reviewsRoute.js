@@ -11,7 +11,7 @@ const catchAsync = require('../utils/catchAsync');
 const { isLoggedIn, validateReviewForm, isReviewAuthor } = require('../utils/middleware');
 
 // ======================= Route Handlers ==========================
-// ------------------ Add New Review ------------------
+// Add New Review
 router.post(
     '/',
     isLoggedIn,
@@ -19,7 +19,7 @@ router.post(
     catchAsync(reviewsController.createReview)
 );
 
-// ------------------ Delete a Review ------------------
+// Delete a Review
 router.delete('/:reviewId', isReviewAuthor, catchAsync(reviewsController.deleteReview));
 
 module.exports = router;
