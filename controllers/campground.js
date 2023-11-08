@@ -22,7 +22,7 @@ module.exports.createNewCampground = async (req, res, next) => {
     res.redirect(`/campgrounds/${newCampground._id}`);
 };
 
-module.exports.campgroundDetail = async (req, res) => {
+module.exports.showCampground = async (req, res) => {
     const tarCampground = await Campground.findById(req.params.id)
         .populate({
             path: 'reviews',
