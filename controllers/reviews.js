@@ -6,6 +6,7 @@ module.exports.createReview = async (req, res) => {
     const tarCampground = await Campground.findById(req.params.id);
     const review = new Review(req.body.review);
     review.author = req.user._id;
+    review.createdAt = new Date(); // Manually set createdAt
     tarCampground.reviews.push(review);
     await review.save();
     await tarCampground.save();
