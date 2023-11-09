@@ -1,3 +1,8 @@
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+// console.log(process.env.CLOUDINARY_CLOUD_NAME);
+
 // step 1: set up the app framework: using express
 const express = require('express');
 const app = express();

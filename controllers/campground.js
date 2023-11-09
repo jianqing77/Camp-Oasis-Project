@@ -1,6 +1,7 @@
 // require Campground model
 const Campground = require('../models/Campground');
-
+const ExpressError = require('../utils/ExpressError');
+const { cloudinary } = require('../cloudinary');
 module.exports.index = async (req, res) => {
     const allCampgrounds = await Campground.find({});
     res.render('campgrounds/index', { allCampgrounds });
@@ -15,9 +16,10 @@ module.exports.createNewCampground = async (req, res, next) => {
         throw new ExpressError('Invalid Campground Data', 400);
     }
     const newCampground = new Campground(req.body.campground);
+    newCampground.images = req.files.map((f) => ({ url: f.path, fileName: f.filename }));
     newCampground.author = req.user._id;
     await newCampground.save();
-
+    console.log(newCampground);
     req.flash('success', 'Successfully added a new campground');
     res.redirect(`/campgrounds/${newCampground._id}`);
 };
@@ -44,7 +46,6 @@ module.exports.renderUpdateForm = async (req, res) => {
         req.flash('error', 'No matching campground found!');
         return res.redirect('/campgrounds');
     }
-    req.flash('success', 'Successfully updated a campground');
     res.render('campgrounds/edit', { tarCampground });
 };
 
@@ -53,6 +54,19 @@ module.exports.updateCampground = async (req, res) => {
     const updatedCampground = await Campground.findByIdAndUpdate(tarId, {
         ...req.body.campground,
     });
+    const imgs = req.files.map((f) => ({ url: f.path, fileName: f.filename }));
+    updatedCampground.images.push(...imgs);
+    await updatedCampground.save();
+    if (req.body.deleteImages) {
+        for (let fileName of req.body.deleteImages) {
+            await cloudinary.uploader.destroy(fileName);
+        }
+        await updatedCampground.updateOne({
+            $pull: { images: { fileName: { $in: req.body.deleteImages } } },
+        });
+    }
+    req.flash('success', 'Successfully updated a campground');
+    console.log(updatedCampground._id);
     res.redirect(`/campgrounds/${updatedCampground._id}`);
 };
 

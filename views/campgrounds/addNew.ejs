@@ -5,7 +5,12 @@
     <!-- Make the form centered -->
     <div class="col-6 offset-3">
         <!-- define a form to allow user to add new campground -->
-        <form action="/campgrounds" method="POST" novalidate class="needs-validation">
+        <form
+            action="/campgrounds"
+            method="POST"
+            novalidate
+            class="needs-validation"
+            enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label" for="title">Title</label>
                 <input
@@ -29,17 +34,6 @@
                 <div class="invalid-feedback">Please provide a location.</div>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="image">Image Url</label>
-                <input
-                    class="form-control"
-                    type="text"
-                    id="image"
-                    name="campground[image]"
-                    required />
-                <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Please provide an image.</div>
-            </div>
-            <div class="mb-3">
                 <label class="form-label" for="description">Description</label>
                 <textarea
                     class="form-control"
@@ -61,11 +55,23 @@
                         placeholder="0.00"
                         aria-label="Amount (to the nearest dollar)"
                         required />
-                    <div class="valid-feedback">Looks good!</div>
-                    <div class="invalid-feedback">Please provide a price.</div>
                 </div>
             </div>
+            <div class="mb-3">
+                <label class="form-label" for="price">Camp Images</label>
 
+                <div class="input-group mb-3">
+                    <input
+                        type="file"
+                        class="form-control"
+                        id="inputGroupFile02"
+                        name="image"
+                        id="image"
+                        multiple />
+                </div>
+                <div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">Please provide a price.</div>
+            </div>
             <div class="mt-4">
                 <button class="btn btn-success">Add Campground</button>
             </div>
